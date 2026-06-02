@@ -4,7 +4,11 @@ import { Badge } from '@/components/ui/badge';
 import { CONTRACTORS } from '@/lib/data';
 import { cn } from '@/lib/utils';
 
-const rankBadge = ['🥇', '🥈', '🥉'];
+const rankColour = [
+  'bg-gold-500 text-morrison-900',
+  'bg-slate-300 text-slate-700',
+  'bg-amber-600 text-white',
+];
 
 export default function ContractorsPage() {
   return (
@@ -55,8 +59,14 @@ export default function ContractorsPage() {
                   key={c.rank}
                   className={cn('grid grid-cols-[50px_1fr_90px_90px_110px_90px] items-center gap-3 px-5 py-3.5', isTop && 'bg-morrison-50')}
                 >
-                  <span className="text-center text-lg">
-                    {c.rank <= 3 ? rankBadge[c.rank - 1] : <span className="text-sm font-bold text-slate-400">{c.rank}</span>}
+                  <span className="flex justify-center">
+                    {c.rank <= 3 ? (
+                      <span className={cn('flex h-7 w-7 items-center justify-center rounded-full text-xs font-black', rankColour[c.rank - 1])}>
+                        {c.rank}
+                      </span>
+                    ) : (
+                      <span className="text-sm font-bold text-slate-400">{c.rank}</span>
+                    )}
                   </span>
                   <span className={cn('text-sm font-bold', isTop ? 'text-morrison-800' : 'text-slate-800')}>{c.name}</span>
                   <span className="text-center text-sm font-semibold text-slate-600">{c.stores}</span>

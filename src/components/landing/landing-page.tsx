@@ -18,6 +18,9 @@ import {
   Star,
   Snowflake,
   Building2,
+  Table as TableIcon,
+  LayoutGrid,
+  Layers,
 } from 'lucide-react';
 import { LogoFull } from '@/components/logo';
 import { cn } from '@/lib/utils';
@@ -278,9 +281,9 @@ export function LandingPage() {
           <FadeSection>
             <motion.div variants={fadeUp} className="grid gap-4 md:grid-cols-3">
               {[
-                { stage: 'Excel', icon: '📊', desc: 'Static rows and columns. Out of date the moment it is saved. No single source of truth.', tone: 'border-slate-200 bg-white' },
-                { stage: 'SmartSheets', icon: '📋', desc: 'More dynamic and visual — but heavily restricted in format, and still not tailored to how you actually work.', tone: 'border-slate-200 bg-white' },
-                { stage: 'CPC Platform', icon: '🚀', desc: 'Custom tools, hyper-tailored to Morrisons. Interactive analysis, hidden AI insights, weather signals and live end-to-end operations.', tone: 'border-morrison-300 bg-morrison-50 ring-2 ring-morrison-200' },
+                { stage: 'Excel', Icon: TableIcon, desc: 'Static rows and columns. Out of date the moment it is saved. No single source of truth.', tone: 'border-slate-200 bg-white', iconBg: 'bg-slate-100', iconColor: 'text-slate-500' },
+                { stage: 'SmartSheets', Icon: LayoutGrid, desc: 'More dynamic and visual — but heavily restricted in format, and still not tailored to how you actually work.', tone: 'border-slate-200 bg-white', iconBg: 'bg-blue-50', iconColor: 'text-blue-500' },
+                { stage: 'CPC Platform', Icon: Layers, desc: 'Custom tools, hyper-tailored to Morrisons. Interactive analysis, hidden AI insights, weather signals and live end-to-end operations.', tone: 'border-morrison-300 bg-morrison-50 ring-2 ring-morrison-200', iconBg: 'bg-morrison-100', iconColor: 'text-morrison-700' },
               ].map((s, i) => (
                 <div key={s.stage} className={cn('relative rounded-2xl border p-6', s.tone)}>
                   {i === 2 && (
@@ -288,7 +291,9 @@ export function LandingPage() {
                       You are here
                     </span>
                   )}
-                  <div className="mb-3 text-3xl">{s.icon}</div>
+                  <div className={cn('mb-3 flex h-12 w-12 items-center justify-center rounded-xl', s.iconBg)}>
+                    <s.Icon className={cn('h-6 w-6', s.iconColor)} />
+                  </div>
                   <h3 className={cn('mb-2 text-lg font-black', i === 2 ? 'text-morrison-800' : 'text-slate-800')}>{s.stage}</h3>
                   <p className="text-sm leading-relaxed text-slate-500">{s.desc}</p>
                 </div>

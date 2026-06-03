@@ -25,17 +25,23 @@ import {
   Zap,
   Users,
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { LogoFull } from '@/components/logo';
 import { cn } from '@/lib/utils';
 import { HeroIllustration } from './hero-illustration';
 import {
   StoreRegisterMockup,
-  MapMockup,
   AIMockup,
   FunnelMockup,
   FinancialMockup,
   SustainabilityMockup,
 } from './mockups';
+
+// Real Leaflet map — dynamically imported to avoid SSR
+const MiniEstateMap = dynamic(
+  () => import('./mini-map').then((m) => m.MiniEstateMap),
+  { ssr: false, loading: () => <div className="flex h-[340px] items-center justify-center rounded-xl bg-slate-100 text-sm text-slate-400">Loading map…</div> }
+);
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
@@ -96,7 +102,7 @@ const FEATURES = [
     accent: 'border-blue-200',
     title: 'Interactive Estate Map',
     desc: 'See the entire estate at a glance on a live, accurate map. Colour-coded markers show delivery stage and risk across every region. Click any location to drill into its programme detail, spend position and project team in real time — no spreadsheet lookup required.',
-    mockup: MapMockup,
+    mockup: null, // rendered separately below as a real map
   },
   {
     icon: Brain,
@@ -410,7 +416,21 @@ export function LandingPage() {
                       <p className="text-base leading-relaxed text-slate-500">{feature.desc}</p>
                     </div>
                     <div className={cn(!isEven && 'md:col-start-1 md:row-start-1')}>
-                      <Mockup />
+                      {Mockup ? (
+                        <Mockup />
+                      ) : (
+                        // Real Leaflet map for the Estate Map feature
+                        <div className="overflow-hidden rounded-xl border border-slate-200 shadow-xl">
+                          <div className="flex items-center gap-2 border-b border-slate-200 bg-slate-50 px-4 py-3">
+                            <span className="text-xs font-semibold text-slate-700">Live Estate Map</span>
+                            <span className="ml-auto flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+                              Live
+                            </span>
+                          </div>
+                          <MiniEstateMap />
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 </FadeSection>

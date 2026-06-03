@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronLeft,
   ChevronRight,
+  Download,
   MapPin,
   PoundSterling,
   Brain,
@@ -422,8 +423,16 @@ export default function SlidesPage() {
           ))}
         </div>
 
-        {/* Arrow buttons */}
+        {/* Right controls */}
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => window.open('/slides/print', '_blank')}
+            className="flex items-center gap-1.5 rounded-lg bg-slate-700 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-slate-600"
+            title="Download as PDF"
+          >
+            <Download className="h-3.5 w-3.5" />
+            PDF
+          </button>
           <button
             onClick={() => go(current - 1)}
             disabled={current === 0}

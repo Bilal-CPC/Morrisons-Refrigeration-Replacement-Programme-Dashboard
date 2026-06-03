@@ -48,44 +48,115 @@ export function StoreRegisterMockup() {
 }
 
 // ─── UK Map Mockup ─────────────────────────────────────────────────────────────
+// Coordinate system: x = ((lon + 8.2) / 10.2) * 180,  y = ((60.9 - lat) / 11.1) * 220
+// This matches the real estate map page so pins sit correctly on the outline.
+
+const UK_OUTLINE =
+  // Clockwise from John o'Groats (NE Scotland) → east coast south → west coast north → Scotland west → north coast back
+  'M 89,44 L 107,63 L 106,73 L 100,82 L 93,88 L 111,102 L 120,117 L 134,129 ' +
+  'L 147,145 L 151,156 L 168,164 L 168,179 L 167,196 L 165,198 L 162,201 ' +
+  'L 143,202 L 112,204 L 101,208 L 78,213 L 44,217 ' +
+  'L 57,207 L 64,197 L 72,195 L 85,192 L 93,190 ' +
+  'L 88,187 L 75,184 L 57,183 L 65,173 L 74,161 L 67,157 L 62,145 ' +
+  'L 77,147 L 90,148 L 92,146 L 91,137 L 88,130 L 82,121 L 86,114 ' +
+  'L 82,110 L 55,113 L 46,102 L 62,96 L 63,89 L 50,84 ' +
+  'L 37,77 L 43,71 L 49,59 L 55,53 L 57,45 ' +
+  'L 67,48 L 83,38 L 89,44 Z';
+
+// Major Morrisons store cities — lat/lon → SVG coords via above formula
+const MAP_PINS = [
+  // Scotland
+  { x: 70,  y: 100, c: '#dc2626' }, // Glasgow (at risk)
+  { x: 88,  y: 98,  c: '#16a34a' }, // Edinburgh
+  // NE England
+  { x: 116, y: 117, c: '#16a34a' }, // Newcastle
+  { x: 120, y: 119, c: '#16a34a' }, // Sunderland
+  // Yorkshire
+  { x: 117, y: 141, c: '#f59e0b' }, // Leeds (on site)
+  { x: 114, y: 141, c: '#16a34a' }, // Bradford
+  { x: 126, y: 138, c: '#16a34a' }, // York
+  { x: 139, y: 142, c: '#f59e0b' }, // Hull (on site)
+  { x: 119, y: 149, c: '#2563eb' }, // Sheffield
+  // NW England
+  { x: 105, y: 147, c: '#16a34a' }, // Manchester
+  { x: 92,  y: 148, c: '#16a34a' }, // Liverpool
+  // Midlands
+  { x: 111, y: 167, c: '#2563eb' }, // Birmingham
+  { x: 124, y: 158, c: '#16a34a' }, // Nottingham
+  { x: 125, y: 164, c: '#7c3aed' }, // Leicester
+  // East
+  { x: 147, y: 172, c: '#16a34a' }, // Cambridge
+  { x: 163, y: 164, c: '#2563eb' }, // Norwich
+  // South
+  { x: 143, y: 186, c: '#16a34a' }, // London
+  { x: 99,  y: 187, c: '#f59e0b' }, // Bristol (on site)
+  { x: 89,  y: 187, c: '#7c3aed' }, // Cardiff
+  { x: 120, y: 198, c: '#2563eb' }, // Southampton
+  { x: 142, y: 199, c: '#16a34a' }, // Brighton
+  { x: 82,  y: 201, c: '#16a34a' }, // Exeter
+];
 
 export function MapMockup() {
-  const pins = [
-    { x: 48, y: 30, c: '#16a34a' },
-    { x: 55, y: 38, c: '#d97706' },
-    { x: 60, y: 28, c: '#16a34a' },
-    { x: 45, y: 45, c: '#2563eb' },
-    { x: 52, y: 52, c: '#dc2626' },
-    { x: 62, y: 48, c: '#16a34a' },
-    { x: 50, y: 62, c: '#7c3aed' },
-    { x: 58, y: 68, c: '#16a34a' },
-    { x: 40, y: 35, c: '#2563eb' },
-    { x: 65, y: 58, c: '#d97706' },
-    { x: 55, y: 75, c: '#94a3b8' },
-    { x: 47, y: 22, c: '#16a34a' },
-  ];
   return (
-    <MockShell title="Live Estate View" badge="Live" badgeClass="bg-emerald-100 text-emerald-700" pulse>
+    <MockShell title="Live Estate Map" badge="Live" badgeClass="bg-emerald-100 text-emerald-700" pulse>
       <div className="flex gap-3 p-3">
-        <div className="relative flex-1 rounded-lg bg-blue-50" style={{ minHeight: 200 }}>
-          <svg viewBox="0 0 100 100" className="h-full w-full" style={{ minHeight: 200 }}>
-            <path
-              d="M 45 8 L 58 12 L 64 22 L 60 30 L 66 42 L 58 52 L 62 62 L 54 74 L 46 80 L 40 70 L 44 58 L 38 46 L 42 34 L 36 24 L 44 14 Z"
-              fill="#dbeafe"
-              stroke="#bfdbfe"
-              strokeWidth={0.8}
-            />
-            {pins.map((p, i) => (
-              <circle key={i} cx={p.x} cy={p.y} r={2} fill={p.c} stroke="white" strokeWidth={0.6} />
+        <div className="relative flex-1 overflow-hidden rounded-lg" style={{ minHeight: 220 }}>
+          <svg viewBox="0 0 180 220" className="h-full w-full" style={{ minHeight: 220 }}>
+            {/* OSM-style water background */}
+            <rect width={180} height={220} fill="#d4e8f5" />
+
+            {/* Subtle lat/lon grid */}
+            {[51, 52, 53, 54, 55, 56, 57, 58].map((lat) => {
+              const y = ((60.9 - lat) / 11.1) * 220;
+              return <line key={lat} x1={0} y1={y} x2={180} y2={y} stroke="#c0d8ec" strokeWidth={0.4} />;
+            })}
+            {[-5, -4, -3, -2, -1, 0, 1].map((lon) => {
+              const x = ((lon + 8.2) / 10.2) * 180;
+              return <line key={lon} x1={x} y1={0} x2={x} y2={220} stroke="#c0d8ec" strokeWidth={0.4} />;
+            })}
+
+            {/* UK land mass */}
+            <path d={UK_OUTLINE} fill="#f2ede6" stroke="#b8c9a0" strokeWidth={0.9} strokeLinejoin="round" />
+
+            {/* At-risk pulse ring (Glasgow) */}
+            <circle cx={70} cy={100} r={5} fill="#dc2626" opacity={0.18}>
+              <animate attributeName="r" values="4;9;4" dur="2s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.25;0;0.25" dur="2s" repeatCount="indefinite" />
+            </circle>
+
+            {/* Store pins */}
+            {MAP_PINS.map((p, i) => (
+              <circle key={i} cx={p.x} cy={p.y} r={2.4} fill={p.c} stroke="white" strokeWidth={0.8} />
             ))}
+
+            {/* Highlighted selected pin — London */}
+            <circle cx={143} cy={186} r={4.5} fill="none" stroke="#16a34a" strokeWidth={1.2} opacity={0.6} />
+            <circle cx={143} cy={186} r={2.8} fill="#16a34a" stroke="white" strokeWidth={1} />
+
+            {/* Tooltip for London */}
+            <g>
+              <rect x={108} y={174} width={60} height={15} rx={3} fill="#0a2417" opacity={0.9} />
+              <text x={138} y={184} fill="white" fontSize={6} fontWeight="600" textAnchor="middle">
+                Morrisons London SE
+              </text>
+            </g>
+
+            {/* Scale indicator */}
+            <g>
+              <line x1={8} y1={213} x2={28} y2={213} stroke="#94a3b8" strokeWidth={1} />
+              <text x={18} y={210} fill="#94a3b8" fontSize={5} textAnchor="middle">50 mi</text>
+            </g>
           </svg>
         </div>
+
         <div className="flex w-24 flex-col justify-center gap-1.5">
           {[
-            { c: '#16a34a', l: 'Complete', n: 127 },
-            { c: '#d97706', l: 'On Site', n: 34 },
-            { c: '#2563eb', l: 'Design', n: 52 },
-            { c: '#dc2626', l: 'At Risk', n: 6 },
+            { c: '#16a34a', l: 'Complete',    n: 127 },
+            { c: '#f59e0b', l: 'On Site',     n: 34  },
+            { c: '#2563eb', l: 'Design',       n: 52  },
+            { c: '#7c3aed', l: 'Procurement',  n: 41  },
+            { c: '#dc2626', l: 'At Risk',      n: 6   },
+            { c: '#94a3b8', l: 'Not Started',  n: 152 },
           ].map((l) => (
             <div key={l.l} className="flex items-center gap-1.5">
               <span className="h-2 w-2 flex-shrink-0 rounded-full" style={{ background: l.c }} />
@@ -93,6 +164,10 @@ export function MapMockup() {
               <span className="ml-auto font-mono text-[9px] text-slate-400">{l.n}</span>
             </div>
           ))}
+          <div className="mt-1 border-t border-slate-100 pt-1.5">
+            <p className="text-[9px] text-slate-400">Total estate</p>
+            <p className="text-base font-black text-slate-800">412</p>
+          </div>
         </div>
       </div>
     </MockShell>

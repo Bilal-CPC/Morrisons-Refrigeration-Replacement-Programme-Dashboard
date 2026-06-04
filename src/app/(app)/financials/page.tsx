@@ -2,8 +2,9 @@ import { PoundSterling, TrendingDown, TrendingUp, Receipt, Banknote, PiggyBank }
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CountUp } from '@/components/dashboard/count-up';
-import { SpendTrendChart } from '@/components/dashboard/charts';
+import { SpendTrendChart, CashflowForecastChart, CostByRegionChart, StageVarianceChart } from '@/components/dashboard/charts';
 import { FGasCountdown } from '@/components/dashboard/fgas-countdown';
+import { cn } from '@/lib/utils';
 
 const summary = [
   { label: 'Approved Budget', value: 50, icon: PoundSterling, color: '#1e293b', sub: 'Total approved programme', tone: 'bg-slate-100' },
@@ -33,6 +34,61 @@ export default function FinancialsPage() {
 
       <div className="mb-6">
         <FGasCountdown />
+      </div>
+
+      {/* Programme birds-eye: EVM strip + cashflow S-curve */}
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Programme Cashflow — Forecast to 2029</CardTitle>
+            <div className="flex flex-wrap items-center gap-3 text-xs">
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-morrison-600" /> Forecast</span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-500" /> Committed</span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-blue-500" /> Spend</span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-slate-400" /> Approved</span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <CashflowForecastChart />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Earned Value</CardTitle>
+            <Badge variant="green">Healthy</Badge>
+          </CardHeader>
+          <CardContent className="space-y-3 py-5">
+            {[
+              { l: 'Cost Performance (CPI)', v: '1.06', good: true, note: 'Spending below planned for work done' },
+              { l: 'Schedule Performance (SPI)', v: '0.97', good: false, note: 'Marginally behind plan — Northern region' },
+              { l: 'Forecast Outturn', v: '£47.0m', good: true, note: '£3m under approved budget' },
+              { l: 'Contingency Drawn', v: '18%', good: true, note: '£0.9m of £5m drawn' },
+            ].map((m) => (
+              <div key={m.l} className="rounded-lg bg-slate-50 p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-slate-600">{m.l}</span>
+                  <span className={cn('text-base font-black', m.good ? 'text-emerald-600' : 'text-amber-600')}>{m.v}</span>
+                </div>
+                <p className="mt-0.5 text-[11px] text-slate-400">{m.note}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Cost distribution + stage variance */}
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader><CardTitle>Budget by Region</CardTitle></CardHeader>
+          <CardContent><CostByRegionChart /></CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Variance by Stage</CardTitle>
+            <span className="text-xs text-slate-400">Green = saving · Red = overspend</span>
+          </CardHeader>
+          <CardContent><StageVarianceChart /></CardContent>
+        </Card>
       </div>
 
       {/* Summary tiles */}

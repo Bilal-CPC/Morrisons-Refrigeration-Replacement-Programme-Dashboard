@@ -1,21 +1,21 @@
-import { Brain, AlertTriangle, ArrowRight, Zap, RefreshCw, CloudRain, Truck, Users } from 'lucide-react';
+import { Brain, AlertTriangle, ArrowRight, Zap, RefreshCw } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AI_INSIGHTS } from '@/lib/data';
 import { cn } from '@/lib/utils';
+import {
+  WeatherRiskDiagram,
+  SupplyChainFlow,
+  ContractorCapacityHeatmap,
+  ProgrammeSignalFeed,
+  RiskTimeline,
+} from '@/components/dashboard/ai-diagrams';
 
 const severityConfig = {
   high: { border: 'border-red-200', bg: 'bg-red-50', icon: 'text-red-500', badge: 'red' as const },
   medium: { border: 'border-amber-200', bg: 'bg-amber-50', icon: 'text-amber-500', badge: 'amber' as const },
   low: { border: 'border-blue-200', bg: 'bg-blue-50', icon: 'text-blue-500', badge: 'blue' as const },
 };
-
-const sources = [
-  { icon: Truck, label: 'Supply Chain ERP', status: 'Connected' },
-  { icon: CloudRain, label: 'Weather Forecast API', status: 'Connected' },
-  { icon: Users, label: 'Contractor Capacity', status: 'Connected' },
-  { icon: Brain, label: 'Programme Data', status: 'Live' },
-];
 
 export default function InsightsPage() {
   return (
@@ -48,24 +48,35 @@ export default function InsightsPage() {
             </button>
           </div>
         </div>
-        {/* Data sources */}
+        {/* Live data-source signal strip */}
         <div className="grid grid-cols-2 gap-3 p-5 md:grid-cols-4">
-          {sources.map((s) => {
-            const Icon = s.icon;
-            return (
-              <div key={s.label} className="flex items-center gap-2.5 rounded-lg border border-slate-100 bg-slate-50 p-3">
-                <Icon className="h-4 w-4 text-morrison-600" />
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold text-slate-700">{s.label}</p>
-                  <p className="flex items-center gap-1 text-[10px] text-emerald-600">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> {s.status}
-                  </p>
-                </div>
+          {[
+            { label: 'Supply Chain ERP', status: 'Connected' },
+            { label: 'Weather Forecast API', status: 'Open-Meteo live' },
+            { label: 'Contractor Capacity', status: 'Connected' },
+            { label: 'Programme Data', status: 'Live' },
+          ].map((s) => (
+            <div key={s.label} className="flex items-center gap-2.5 rounded-lg border border-slate-100 bg-slate-50 p-3">
+              <span className="h-2 w-2 flex-shrink-0 animate-pulse rounded-full bg-emerald-500" />
+              <div className="min-w-0">
+                <p className="truncate text-xs font-semibold text-slate-700">{s.label}</p>
+                <p className="text-[10px] text-emerald-600">{s.status}</p>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </Card>
+
+      {/* Bespoke intelligence diagrams */}
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <WeatherRiskDiagram />
+        <SupplyChainFlow />
+        <ContractorCapacityHeatmap />
+        <ProgrammeSignalFeed />
+      </div>
+      <div className="mb-6">
+        <RiskTimeline />
+      </div>
 
       {/* Insights list */}
       <div className="grid grid-cols-1 gap-3">

@@ -2,6 +2,9 @@ import { Leaf, Zap, PoundSterling, Store } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CountUp } from '@/components/dashboard/count-up';
+import { SUSTAINABILITY_BY_REGION } from '@/lib/data';
+
+const maxCarbon = Math.max(...SUSTAINABILITY_BY_REGION.map((r) => r.carbon));
 
 const metrics = [
   { icon: Leaf, value: 18700, label: 'Carbon Saved', unit: 'tCO₂e', sub: 'vs. legacy R404a systems', color: '#16a34a', bg: 'bg-emerald-50' },
@@ -99,6 +102,53 @@ export default function SustainabilityPage() {
                 </div>
               </div>
             ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Regional breakdown + F-Gas conversion tracker */}
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Carbon Saved by Region</CardTitle>
+            <Badge variant="outline">tCO₂e</Badge>
+          </CardHeader>
+          <CardContent className="space-y-2.5 py-5">
+            {SUSTAINABILITY_BY_REGION.map((r) => (
+              <div key={r.region}>
+                <div className="mb-1 flex items-center justify-between text-xs">
+                  <span className="text-slate-600">{r.region}</span>
+                  <span className="font-bold text-emerald-600">{r.carbon.toLocaleString()}</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-full rounded-full bg-emerald-500" style={{ width: `${(r.carbon / maxCarbon) * 100}%` }} />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>F-Gas Conversion by Region</CardTitle>
+            <Badge variant="green">Low-GWP transition</Badge>
+          </CardHeader>
+          <CardContent className="space-y-2.5 py-5">
+            {SUSTAINABILITY_BY_REGION.map((r) => {
+              const pct = Math.round((r.converted / r.total) * 100);
+              return (
+                <div key={r.region} className="flex items-center gap-3">
+                  <span className="w-28 flex-shrink-0 truncate text-xs text-slate-600">{r.region}</span>
+                  <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-full rounded-full bg-morrison-600" style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="w-20 flex-shrink-0 text-right text-xs font-semibold text-slate-700">{r.converted}/{r.total} · {pct}%</span>
+                </div>
+              );
+            })}
+            <p className="pt-1 text-[11px] text-slate-400">
+              Converted stores run low-GWP refrigerant with continuous leak monitoring — the core of F-Gas compliance.
+            </p>
           </CardContent>
         </Card>
       </div>

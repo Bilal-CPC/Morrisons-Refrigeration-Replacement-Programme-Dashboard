@@ -1,7 +1,11 @@
-import { FileBarChart, Download, FileText, Calendar, Building2, Leaf, PoundSterling } from 'lucide-react';
+'use client';
+
+import { useMemo, useState } from 'react';
+import { FileBarChart, Download, FileText, Calendar, Building2, Leaf, PoundSterling, Sparkles } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { RegionBarChart } from '@/components/dashboard/charts';
+import { STORES, STAGE_META, type StoreStage } from '@/lib/data';
+import { cn } from '@/lib/utils';
 
 const reports = [
   { icon: Building2, label: 'Monthly Programme Board Pack', desc: 'Full executive summary across all 412 stores', updated: 'Generated 2 days ago', pages: 24 },
@@ -10,7 +14,21 @@ const reports = [
   { icon: FileText, label: 'Risk & Intervention Summary', desc: 'AI-flagged risks and mitigation actions', updated: 'Generated 14 min ago', pages: 9 },
 ];
 
+const REGIONS = Array.from(new Set(STORES.map((s) => s.region)));
+const METRICS = ['Cost & forecast', 'Programme dates', 'Risk register', 'Contractor SLA', 'Carbon'];
+
 export default function ReportsPage() {
+  const [region, setRegion] = useState<string | null>(null);
+  const [stage, setStage] = useState<StoreStage | null>(null);
+  const [metrics, setMetrics] = useState<string[]>(['Cost & forecast', 'Programme dates']);
+
+  const matched = useMemo(
+    () => STORES.filter((s) => (!region || s.region === region) && (!stage || s.stage === stage)),
+    [region, stage],
+  );
+  const toggleMetric = (m: string) =>
+    setMetrics((prev) => (prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m]));
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -51,34 +69,85 @@ export default function ReportsPage() {
           <CardContent>
             <RegionBarChart />
             <div className="mt-3 flex items-center justify-center gap-3 text-xs">
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-600" /> Complete
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-amber-500" /> In Delivery
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-slate-300" /> Not Started
-              </span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-600" /> Complete</span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-500" /> In Delivery</span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-slate-300" /> Not Started</span>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="mt-4 flex flex-wrap items-center justify-between gap-4 p-5">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold-100">
-            <Badge variant="gold">AI</Badge>
+      {/* Interactive custom report builder */}
+      <Card className="mt-4">
+        <div className="flex items-center gap-3 border-b border-slate-100 px-5 py-4" style={{ background: '#0a2417' }}>
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg" style={{ background: '#ffc72c' }}>
+            <Sparkles className="h-4 w-4" style={{ color: '#0a2417' }} />
           </div>
           <div>
-            <p className="text-sm font-bold text-slate-800">Custom Report Builder</p>
-            <p className="text-xs text-slate-500">Ask the AI to assemble any view — &quot;show me all at-risk stores in the North over budget&quot;</p>
+            <p className="text-sm font-bold text-white">Custom Report Builder</p>
+            <p className="text-xs text-white/50">Select your parameters — the preview updates live</p>
           </div>
         </div>
-        <button className="rounded-lg bg-morrison-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-morrison-700">
-          Build a report
-        </button>
+        <CardContent className="space-y-4 py-5">
+          {/* Region */}
+          <div>
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">Region</p>
+            <div className="flex flex-wrap gap-1.5">
+              <Chip active={region === null} onClick={() => setRegion(null)}>All regions</Chip>
+              {REGIONS.map((r) => (
+                <Chip key={r} active={region === r} onClick={() => setRegion(r)}>{r}</Chip>
+              ))}
+            </div>
+          </div>
+          {/* Stage */}
+          <div>
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">Stage</p>
+            <div className="flex flex-wrap gap-1.5">
+              <Chip active={stage === null} onClick={() => setStage(null)}>All stages</Chip>
+              {(Object.keys(STAGE_META) as StoreStage[]).map((st) => (
+                <Chip key={st} active={stage === st} onClick={() => setStage(st)}>{STAGE_META[st].label}</Chip>
+              ))}
+            </div>
+          </div>
+          {/* Metrics */}
+          <div>
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">Include metrics</p>
+            <div className="flex flex-wrap gap-1.5">
+              {METRICS.map((m) => (
+                <Chip key={m} active={metrics.includes(m)} onClick={() => toggleMetric(m)}>{m}</Chip>
+              ))}
+            </div>
+          </div>
+          {/* Live preview */}
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-morrison-200 bg-morrison-50 p-4">
+            <div>
+              <p className="text-sm font-bold text-morrison-800">
+                {matched.length} store{matched.length !== 1 ? 's' : ''} · {metrics.length} metric{metrics.length !== 1 ? 's' : ''}
+              </p>
+              <p className="text-xs text-morrison-700">
+                {region ?? 'All regions'} · {stage ? STAGE_META[stage].label : 'All stages'} · est. {Math.max(1, Math.round(matched.length / 24) + metrics.length)} pages
+              </p>
+            </div>
+            <button className="flex items-center gap-1.5 rounded-lg bg-morrison-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-morrison-700">
+              <Download className="h-4 w-4" /> Generate report
+            </button>
+          </div>
+        </CardContent>
       </Card>
     </div>
+  );
+}
+
+function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'rounded-full border px-3 py-1 text-xs font-semibold transition-colors',
+        active ? 'border-morrison-600 bg-morrison-600 text-white' : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300',
+      )}
+    >
+      {children}
+    </button>
   );
 }

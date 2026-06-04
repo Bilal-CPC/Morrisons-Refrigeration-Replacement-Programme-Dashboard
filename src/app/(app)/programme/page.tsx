@@ -1,8 +1,11 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FUNNEL } from '@/lib/data';
+import { FUNNEL, STORES, STAGE_VELOCITY } from '@/lib/data';
+import { StageProgressionChart } from '@/components/dashboard/charts';
 
 const MAX = FUNNEL[0].count;
+const atRisk = STORES.filter((s) => s.stage === 'AtRisk').length;
+const velColour = ['bg-blue-500', 'bg-violet-500', 'bg-amber-500', 'bg-emerald-500'];
 
 export default function ProgrammePage() {
   return (
@@ -70,25 +73,57 @@ export default function ProgrammePage() {
               <CardTitle>Stage Velocity</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {[
-                { stage: 'Design → Tender', days: 42, color: 'bg-blue-500' },
-                { stage: 'Tender → Award', days: 28, color: 'bg-violet-500' },
-                { stage: 'Award → Construction', days: 35, color: 'bg-amber-500' },
-                { stage: 'Construction → Handover', days: 72, color: 'bg-emerald-500' },
-              ].map((v) => (
-                <div key={v.stage}>
-                  <div className="mb-1 flex items-center justify-between text-xs">
-                    <span className="text-slate-500">{v.stage}</span>
-                    <span className="font-bold text-slate-700">{v.days} days avg</span>
+              {STAGE_VELOCITY.map((v, i) => {
+                const slow = v.days > v.target;
+                return (
+                  <div key={v.stage}>
+                    <div className="mb-1 flex items-center justify-between text-xs">
+                      <span className="text-slate-500">{v.stage}</span>
+                      <span className={slow ? 'font-bold text-amber-600' : 'font-bold text-slate-700'}>
+                        {v.days}d {slow ? `(+${v.days - v.target} vs target)` : '(on target)'}
+                      </span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                      <div className={`h-full rounded-full ${velColour[i]}`} style={{ width: `${(v.days / 80) * 100}%` }} />
+                    </div>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                    <div className={`h-full rounded-full ${v.color}`} style={{ width: `${(v.days / 80) * 100}%` }} />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* Stage progression over time + bottleneck overlay */}
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Stage Progression Over Time</CardTitle>
+            <div className="flex items-center gap-3 text-xs">
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-blue-500" /> In design+</span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-500" /> Construction+</span>
+              <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" /> Handed over</span>
+            </div>
+          </CardHeader>
+          <CardContent><StageProgressionChart /></CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle>Bottlenecks &amp; Risk</CardTitle></CardHeader>
+          <CardContent className="space-y-3 py-5">
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <p className="text-xs font-bold text-amber-700">Slowest transition</p>
+              <p className="mt-0.5 text-sm font-semibold text-slate-700">Award → Construction</p>
+              <p className="text-[11px] text-amber-600">35 days avg · 7 days over target — contractor mobilisation</p>
+            </div>
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+              <p className="text-xs font-bold text-red-700">{atRisk} stores at risk of stage delay</p>
+              <p className="mt-0.5 text-[11px] text-red-600">Supply-chain &amp; resource pressure in the Northern region</p>
+            </div>
+            <div className="rounded-lg bg-slate-50 p-3">
+              <p className="text-xs text-slate-500">Largest drop-off is Tender → Construction (128 sites still upstream) — the focus for acceleration.</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

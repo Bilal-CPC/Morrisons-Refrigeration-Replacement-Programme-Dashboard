@@ -199,7 +199,7 @@ export function LandingPage() {
               </span>
             </motion.h1>
             <motion.p variants={fadeUp} className="mx-auto mb-8 max-w-2xl text-xl leading-relaxed text-slate-500">
-              CPC Project Services doesn&apos;t just manage your capital programmes — we provide the live platform to run them with complete precision. Every site. Every stage. Every pound. In one place.
+              CPC Project Services has delivered national capital programmes for decades. Now we put that expertise into a live platform — built <span className="font-semibold text-slate-700">with you</span>, around how your teams actually work, and modular enough to run any programme across the estate. This refrigeration view is one example of what we&apos;d build together.
             </motion.p>
             <motion.div variants={fadeUp} className="flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link href="/overview" className="flex items-center gap-2 rounded-xl bg-morrison-600 px-8 py-4 text-base font-bold text-white shadow-lg shadow-morrison-600/25 transition-all hover:bg-morrison-700">
@@ -268,7 +268,7 @@ export function LandingPage() {
               The tools haven&apos;t kept up.<br />Until now.
             </motion.h2>
             <motion.p variants={fadeUp} className="mx-auto max-w-2xl text-lg leading-relaxed text-slate-500">
-              National capital delivery programmes have been managed through spreadsheets, shared drives and generic project tools for years — not because the teams weren&apos;t capable, but because nothing purpose-built existed. CPC built that thing.
+              National capital delivery programmes have been managed through spreadsheets, shared drives and generic project tools for years — not because the teams weren&apos;t capable, but because nothing purpose-built existed. CPC built that — and we keep building it, module by module, with the teams who use it.
             </motion.p>
           </FadeSection>
 
@@ -459,8 +459,8 @@ export function LandingPage() {
               },
               {
                 Icon: Zap,
-                title: 'Configured to Morrisons, not adapted from generic',
-                desc: "This is not an off-the-shelf tool with Morrisons' logo on it. The register, the stage gates, the financial structure and the compliance layer all reflect how Morrisons actually operates its estate.",
+                title: 'Shaped around you — and it keeps evolving',
+                desc: "This is not an off-the-shelf tool with Morrisons' logo on it. We start from your workflow, pain points and stage gates, and shape the register, financial structure and compliance layer around them — then keep developing it with you as the programme grows.",
               },
               {
                 Icon: ShieldCheck,
@@ -553,8 +553,8 @@ export function LandingPage() {
         <div className="mx-auto max-w-5xl">
           <FadeSection className="mb-16 text-center">
             <motion.div variants={fadeUp} className="mb-3 inline-block text-xs font-bold uppercase tracking-widest text-slate-400">Engagement models</motion.div>
-            <motion.h2 variants={fadeUp} className="mb-4 text-4xl font-black tracking-tight">A platform that scales with the programme.</motion.h2>
-            <motion.p variants={fadeUp} className="text-lg text-slate-500">From a single programme to the full Morrisons estate — structured to fit how CPC and Morrisons work together.</motion.p>
+            <motion.h2 variants={fadeUp} className="mb-4 text-4xl font-black tracking-tight">Modular by design. Scales with you.</motion.h2>
+            <motion.p variants={fadeUp} className="text-lg text-slate-500">Every capability is a building block. Start with one programme, switch on the modules you need, and add new ones as priorities emerge — from a single programme to the full Morrisons estate, structured around how CPC and Morrisons work together.</motion.p>
           </FadeSection>
           <FadeSection className="grid gap-6 md:grid-cols-3">
             {[

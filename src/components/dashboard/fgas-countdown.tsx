@@ -41,14 +41,16 @@ export function FGasCountdown({ compact = false }: { compact?: boolean }) {
 
   return (
     <div
-      className="flex flex-wrap items-center justify-between gap-3 rounded-xl border px-5 py-3"
-      style={{ background: '#7c2d12', borderColor: '#9a3412' }}
+      className="flex flex-wrap items-center justify-between gap-3 overflow-hidden rounded-xl border-l-4 px-5 py-3"
+      style={{ background: '#0a2417', borderColor: '#ffc72c' }}
     >
       <div className="flex items-center gap-2.5">
-        <AlertTriangle className="h-4 w-4 flex-shrink-0 text-orange-300" />
+        <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg" style={{ background: 'rgba(255,199,44,0.15)' }}>
+          <AlertTriangle className="h-4 w-4" style={{ color: '#ffc72c' }} />
+        </div>
         <div>
-          <span className="text-sm font-bold text-orange-50">F-Gas Compliance Deadline</span>
-          <span className="ml-2 hidden text-xs text-orange-300 sm:inline">
+          <span className="text-sm font-bold text-white">F-Gas Compliance Deadline</span>
+          <span className="ml-2 hidden text-xs text-white/50 sm:inline">
             HFC phase-down — refrigeration systems upgrade required
           </span>
         </div>
@@ -61,10 +63,10 @@ export function FGasCountdown({ compact = false }: { compact?: boolean }) {
           { v: time?.seconds ?? 0, l: 'sec' },
         ].map((u) => (
           <div key={u.l} className="flex min-w-[2.5rem] flex-col items-center">
-            <span className="text-base font-bold leading-none text-white">
+            <span className="text-base font-bold leading-none" style={{ color: u.big ? '#ffc72c' : '#ffffff' }}>
               {u.big ? (time?.days ?? 0).toLocaleString() : pad(u.v)}
             </span>
-            <span className="mt-0.5 text-[9px] font-normal text-orange-400">{u.l}</span>
+            <span className="mt-0.5 text-[9px] font-normal text-white/40">{u.l}</span>
           </div>
         ))}
       </div>

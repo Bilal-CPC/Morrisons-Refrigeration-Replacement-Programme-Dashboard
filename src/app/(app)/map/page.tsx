@@ -33,8 +33,8 @@ export default function MapPage() {
 
       <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Real Leaflet map */}
-        <Card className="overflow-hidden lg:col-span-2">
-          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3">
+        <Card className="flex flex-col overflow-hidden lg:col-span-2">
+          <div className="flex flex-shrink-0 items-center justify-between border-b border-slate-100 px-5 py-3">
             <h3 className="text-sm font-bold text-slate-900">National Programme Map</h3>
             <div className="flex flex-wrap items-center gap-3">
               {(Object.keys(STAGE_META) as StoreStage[]).map((stage) => {
@@ -49,7 +49,7 @@ export default function MapPage() {
               })}
             </div>
           </div>
-          <div className="h-[500px] w-full">
+          <div className="min-h-[500px] w-full flex-1">
             <EstateMap stores={STORES} selected={selected} onSelect={setSelected} />
           </div>
         </Card>

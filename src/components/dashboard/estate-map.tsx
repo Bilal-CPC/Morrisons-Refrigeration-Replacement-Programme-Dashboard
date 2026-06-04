@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import type { Map as LeafletMap, Marker } from 'leaflet';
+// ResizeObserver is a browser global; this component is client-only.
 import type { Store, StoreStage } from '@/lib/data';
 
 // Stage colours matched to the rest of the app
@@ -24,6 +25,9 @@ export function EstateMap({ stores, selected, onSelect }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const markersRef = useRef<Map<string, Marker>>(new Map());
+  const selectedRef = useRef<Store | null>(selected);
+  const resizeObsRef = useRef<ResizeObserver | null>(null);
+  selectedRef.current = selected;
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -40,8 +44,6 @@ export function EstateMap({ stores, selected, onSelect }: Props) {
       });
 
       const map = L.map(containerRef.current!, {
-        center: [54.4, -2.8],
-        zoom: 6,
         zoomControl: true,
         attributionControl: true,
       });
@@ -53,6 +55,24 @@ export function EstateMap({ stores, selected, onSelect }: Props) {
         attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         maxZoom: 19,
       }).addTo(map);
+
+      // Frame Great Britain so the estate fills the box (not all of Europe)
+      const UK_BOUNDS = L.latLngBounds([49.9, -8.2], [58.8, 1.9]);
+      map.fitBounds(UK_BOUNDS, { padding: [16, 16] });
+
+      // Container may not have its final size at creation (dynamic import + flex
+      // layout) — recompute once it does, and on any later resize.
+      const refit = () => {
+        map.invalidateSize();
+        if (!selectedRef.current) map.fitBounds(UK_BOUNDS, { padding: [16, 16] });
+      };
+      requestAnimationFrame(refit);
+      setTimeout(refit, 200);
+      if (typeof ResizeObserver !== 'undefined' && containerRef.current) {
+        const ro = new ResizeObserver(() => map.invalidateSize());
+        ro.observe(containerRef.current);
+        resizeObsRef.current = ro;
+      }
 
       // Add markers for each store
       stores.forEach((store) => {
@@ -90,6 +110,8 @@ export function EstateMap({ stores, selected, onSelect }: Props) {
     });
 
     return () => {
+      resizeObsRef.current?.disconnect();
+      resizeObsRef.current = null;
       mapRef.current?.remove();
       mapRef.current = null;
       markersRef.current.clear();

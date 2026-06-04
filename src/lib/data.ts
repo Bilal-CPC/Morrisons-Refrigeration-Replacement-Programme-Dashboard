@@ -209,6 +209,13 @@ export const STORES: Store[] = [
   { id: 'MRS-118', name: 'Tonbridge Angel Centre', city: 'Tonbridge', region: 'London & South', lat: 51.20, lon: 0.27, stage: 'NotStarted', budget: 470000, forecast: 470000, start: 'TBC', completion: 'TBC', status: 'Green', contractor: 'TBC', pm: 'TBC', risks: [], milestones: M_DESIGN },
   { id: 'MRS-119', name: 'Woking Goldsworth Park', city: 'Woking', region: 'London & South', lat: 51.32, lon: -0.56, stage: 'Complete', budget: 476000, forecast: 470000, start: '6 Oct 2025', completion: '24 Dec 2025', status: 'Green', contractor: 'Contractor A', pm: 'Emma Clarke', risks: [], milestones: M_DONE },
   { id: 'MRS-120', name: 'Fareham Newgate Lane', city: 'Fareham', region: 'London & South', lat: 50.85, lon: -1.18, stage: 'Design', budget: 468000, forecast: 465000, start: '1 Oct 2026', completion: '20 Dec 2026', status: 'Green', contractor: 'TBC', pm: 'David Walsh', risks: [], milestones: M_DESIGN },
+  // ── North & East London (precise coordinates) ──
+  { id: 'MRS-121', name: 'London Chingford Mount', city: 'London', region: 'London & South', lat: 51.6230, lon: -0.0167, stage: 'OnSite', budget: 482000, forecast: 478000, start: '5 Feb 2026', completion: '18 Apr 2026', status: 'Amber', contractor: 'Contractor D', pm: 'Priya Sharma', risks: ['Restricted delivery access on Old Church Road'], milestones: M_FULL },
+  { id: 'MRS-122', name: 'London Enfield Town', city: 'London', region: 'London & South', lat: 51.6523, lon: -0.0807, stage: 'Design', budget: 495000, forecast: 491000, start: '12 May 2026', completion: '24 Jul 2026', status: 'Green', contractor: 'Contractor D', pm: 'Priya Sharma', risks: [], milestones: M_DESIGN },
+  { id: 'MRS-123', name: 'London Edmonton Green', city: 'London', region: 'London & South', lat: 51.6149, lon: -0.0610, stage: 'NotStarted', budget: 488000, forecast: 488000, start: 'TBC', completion: 'TBC', status: 'Green', contractor: 'TBC', pm: 'TBC', risks: [], milestones: M_DESIGN },
+  { id: 'MRS-124', name: 'London Walthamstow', city: 'London', region: 'London & South', lat: 51.5860, lon: -0.0210, stage: 'Complete', budget: 476000, forecast: 470000, start: '8 Sep 2025', completion: '28 Nov 2025', status: 'Green', contractor: 'Contractor A', pm: 'Emma Clarke', risks: [], milestones: M_DONE },
+  { id: 'MRS-125', name: 'London Palmers Green', city: 'London', region: 'London & South', lat: 51.6180, lon: -0.1110, stage: 'Procurement', budget: 491000, forecast: 489000, start: '3 Jun 2026', completion: '15 Aug 2026', status: 'Green', contractor: 'TBC', pm: 'David Walsh', risks: [], milestones: M_DESIGN },
+  { id: 'MRS-126', name: 'London Tottenham Hale', city: 'London', region: 'London & South', lat: 51.5882, lon: -0.0598, stage: 'AtRisk', budget: 502000, forecast: 519000, start: '20 Jan 2026', completion: '2 Apr 2026', status: 'Red', contractor: 'Contractor D', pm: 'Priya Sharma', risks: ['HV supply upgrade delayed by DNO', 'Forecast over budget — temporary plant hire extended'], milestones: M_FULL },
 ];
 
 // ─── Programme-level KPIs (headline numbers from the brief) ────────────────────
@@ -330,4 +337,162 @@ export const DOCUMENTS: { label: string; count: string; icon: string }[] = [
   { label: 'Cost Reports', count: '508 reports', icon: 'pound' },
   { label: 'Meeting Minutes', count: '3,218 files', icon: 'message' },
   { label: 'Programme Reports', count: '97 reports', icon: 'chart' },
+];
+
+// Individual document records for the searchable Document Hub list.
+export type DocType =
+  | 'Handover'
+  | 'Snagging'
+  | 'Tender'
+  | 'Progress'
+  | 'Risk'
+  | 'Cost'
+  | 'Minutes'
+  | 'Report';
+
+export interface DocRecord {
+  id: string;
+  name: string;
+  type: DocType;
+  store: string;       // store name or 'Programme-wide'
+  contractor: string;  // or 'CPC PMO'
+  date: string;        // 'DD Mon YYYY'
+  size: string;
+  version: string;
+}
+
+export const DOCUMENT_FILES: DocRecord[] = [
+  { id: 'DOC-4821', name: 'Leeds Kirkstall — Handover Pack', type: 'Handover', store: 'Leeds Kirkstall', contractor: 'Contractor A', date: '02 Jun 2026', size: '24.1 MB', version: 'v3.0' },
+  { id: 'DOC-4820', name: 'Hull Bransholme — Snagging Register', type: 'Snagging', store: 'Hull Bransholme', contractor: 'Contractor B', date: '01 Jun 2026', size: '1.2 MB', version: 'v1.4' },
+  { id: 'DOC-4815', name: 'May Programme Board Pack', type: 'Report', store: 'Programme-wide', contractor: 'CPC PMO', date: '31 May 2026', size: '8.6 MB', version: 'v1.0' },
+  { id: 'DOC-4810', name: 'Manchester Eccles — Cost Report', type: 'Cost', store: 'Manchester Eccles', contractor: 'Contractor A', date: '29 May 2026', size: '640 KB', version: 'v2.1' },
+  { id: 'DOC-4805', name: 'NW Region — Compressor Tender Package', type: 'Tender', store: 'Programme-wide', contractor: 'CPC PMO', date: '27 May 2026', size: '12.4 MB', version: 'v2.0' },
+  { id: 'DOC-4802', name: 'Birmingham Erdington — Site Progress', type: 'Progress', store: 'Birmingham Erdington', contractor: 'Contractor C', date: '26 May 2026', size: '3.1 MB', version: 'v6.0' },
+  { id: 'DOC-4798', name: 'Programme Risk Register', type: 'Risk', store: 'Programme-wide', contractor: 'CPC PMO', date: '25 May 2026', size: '980 KB', version: 'v14.0' },
+  { id: 'DOC-4790', name: 'Cardiff Roath — Pre-start Minutes', type: 'Minutes', store: 'Cardiff Roath', contractor: 'Contractor B', date: '22 May 2026', size: '210 KB', version: 'v1.0' },
+  { id: 'DOC-4781', name: 'Glasgow Parkhead — Handover Pack', type: 'Handover', store: 'Glasgow Parkhead', contractor: 'Contractor C', date: '20 May 2026', size: '19.7 MB', version: 'v2.0' },
+  { id: 'DOC-4774', name: 'Carbon & Sustainability — Q1 Report', type: 'Report', store: 'Programme-wide', contractor: 'CPC PMO', date: '18 May 2026', size: '4.2 MB', version: 'v1.0' },
+  { id: 'DOC-4769', name: 'Sheffield Hillsborough — Snagging', type: 'Snagging', store: 'Sheffield Hillsborough', contractor: 'Contractor A', date: '15 May 2026', size: '1.5 MB', version: 'v1.1' },
+  { id: 'DOC-4760', name: 'London Clapham — Cost Report', type: 'Cost', store: 'London Clapham', contractor: 'Contractor D', date: '13 May 2026', size: '720 KB', version: 'v1.0' },
+];
+
+// ─── Weather signals (per UK region) ───────────────────────────────────────────
+// `lat`/`lon` are regional centroids used for the live Open-Meteo lookup; the
+// remaining fields are the fallback values shown if the live call is unavailable.
+
+export type WeatherRisk = 'low' | 'medium' | 'high';
+
+export interface WeatherRegion {
+  region: string;
+  lat: number;
+  lon: number;
+  risk: WeatherRisk;
+  tempC: number;       // fallback current temp
+  precip: number;      // fallback precipitation mm
+  wind: number;        // fallback wind km/h
+  storesAtRisk: number;
+  note: string;
+}
+
+export const WEATHER_REGIONS: WeatherRegion[] = [
+  { region: 'Scotland', lat: 56.5, lon: -4.2, risk: 'high', tempC: 2, precip: 4.1, wind: 38, storesAtRisk: 7, note: 'Cold snap forecast — commissioning at risk Q4' },
+  { region: 'North East', lat: 54.9, lon: -1.6, risk: 'medium', tempC: 6, precip: 1.8, wind: 26, storesAtRisk: 3, note: 'Wind affecting roof-mounted plant lifts' },
+  { region: 'North West', lat: 53.5, lon: -2.6, risk: 'medium', tempC: 7, precip: 2.6, wind: 22, storesAtRisk: 4, note: 'Persistent rain slowing groundworks' },
+  { region: 'Yorkshire', lat: 53.8, lon: -1.5, risk: 'low', tempC: 8, precip: 0.6, wind: 15, storesAtRisk: 1, note: 'Settled — no weather impact expected' },
+  { region: 'Wales', lat: 52.1, lon: -3.8, risk: 'medium', tempC: 7, precip: 3.2, wind: 28, storesAtRisk: 2, note: 'Exposed sites — wind monitoring active' },
+  { region: 'Midlands', lat: 52.5, lon: -1.9, risk: 'low', tempC: 9, precip: 0.4, wind: 13, storesAtRisk: 0, note: 'Settled conditions' },
+  { region: 'East', lat: 52.4, lon: 0.3, risk: 'low', tempC: 9, precip: 0.2, wind: 16, storesAtRisk: 0, note: 'Settled conditions' },
+  { region: 'London & South', lat: 51.4, lon: -0.2, risk: 'low', tempC: 11, precip: 0.3, wind: 12, storesAtRisk: 0, note: 'Mild — no impact' },
+  { region: 'South West', lat: 50.9, lon: -3.5, risk: 'medium', tempC: 10, precip: 2.1, wind: 24, storesAtRisk: 1, note: 'Coastal wind affecting access' },
+];
+
+// ─── Supply-chain signals ──────────────────────────────────────────────────────
+
+export interface SupplyItem {
+  material: string;
+  leadWeeks: number;
+  baselineWeeks: number;
+  trend: 'up' | 'down' | 'flat';
+  status: RAG;
+  affectedStores: number;
+  region: string;
+}
+
+export const SUPPLY_CHAIN: SupplyItem[] = [
+  { material: 'Compressor units', leadWeeks: 6, baselineWeeks: 3, trend: 'up', status: 'Red', affectedStores: 12, region: 'Northern' },
+  { material: 'CO₂ refrigerant', leadWeeks: 4, baselineWeeks: 3, trend: 'up', status: 'Amber', affectedStores: 6, region: 'National' },
+  { material: 'Control systems', leadWeeks: 3, baselineWeeks: 3, trend: 'flat', status: 'Green', affectedStores: 0, region: 'National' },
+  { material: 'Condensing units', leadWeeks: 5, baselineWeeks: 4, trend: 'up', status: 'Amber', affectedStores: 5, region: 'Scotland' },
+  { material: 'Pipework & valves', leadWeeks: 2, baselineWeeks: 2, trend: 'flat', status: 'Green', affectedStores: 0, region: 'National' },
+  { material: 'Display cabinets', leadWeeks: 4, baselineWeeks: 5, trend: 'down', status: 'Green', affectedStores: 0, region: 'National' },
+];
+
+// ─── Programme stage progression (time-series for the funnel page) ──────────────
+
+export const PROGRAMME_TREND = [
+  { month: 'Jul', design: 210, construction: 60, handover: 18 },
+  { month: 'Aug', design: 240, construction: 78, handover: 31 },
+  { month: 'Sep', design: 270, construction: 96, handover: 52 },
+  { month: 'Oct', design: 295, construction: 112, handover: 71 },
+  { month: 'Nov', design: 312, construction: 128, handover: 88 },
+  { month: 'Dec', design: 324, construction: 140, handover: 99 },
+  { month: 'Jan', design: 332, construction: 149, handover: 110 },
+  { month: 'Feb', design: 337, construction: 154, handover: 118 },
+  { month: 'Mar', design: 340, construction: 158, handover: 122 },
+  { month: 'Apr', design: 341, construction: 160, handover: 125 },
+  { month: 'May', design: 341, construction: 161, handover: 127 },
+];
+
+export const STAGE_VELOCITY: { stage: string; days: number; target: number }[] = [
+  { stage: 'Design → Tender', days: 42, target: 40 },
+  { stage: 'Tender → Award', days: 28, target: 30 },
+  { stage: 'Award → Construction', days: 35, target: 28 },
+  { stage: 'Construction → Handover', days: 72, target: 70 },
+];
+
+// ─── Sustainability by region ───────────────────────────────────────────────────
+
+export const SUSTAINABILITY_BY_REGION: { region: string; carbon: number; energy: number; converted: number; total: number }[] = [
+  { region: 'Yorkshire', carbon: 3100, energy: 14, converted: 22, total: 58 },
+  { region: 'North West', carbon: 2850, energy: 13, converted: 19, total: 54 },
+  { region: 'Midlands', carbon: 2400, energy: 12, converted: 16, total: 49 },
+  { region: 'London & South', carbon: 2200, energy: 11, converted: 14, total: 62 },
+  { region: 'Scotland', carbon: 2050, energy: 12, converted: 15, total: 45 },
+  { region: 'North East', carbon: 1480, energy: 11, converted: 12, total: 30 },
+  { region: 'South West', carbon: 1320, energy: 10, converted: 10, total: 32 },
+  { region: 'Wales', carbon: 1000, energy: 10, converted: 9, total: 28 },
+  { region: 'East', carbon: 300, energy: 9, converted: 10, total: 54 },
+];
+
+// ─── Contractor SLA definitions (target vs actual per contractor) ───────────────
+
+export interface ContractorSLA {
+  name: string;
+  onTime: number;          // %
+  quality: number;         // quality score %
+  defectRate: number;      // defects per store
+  safetyIncidents: number; // reportable incidents
+  slaCompliance: number;   // overall SLA adherence %
+  responseDays: number;    // avg response to instruction
+  capacity: number;        // capacity utilisation %
+  regions: string[];
+  trend: number[];         // 12-pt on-time history
+}
+
+export const CONTRACTOR_SLAS: ContractorSLA[] = [
+  { name: 'Contractor A', onTime: 96, quality: 94, defectRate: 1.2, safetyIncidents: 0, slaCompliance: 97, responseDays: 1.4, capacity: 82, regions: ['Yorkshire', 'North West', 'North East'], trend: [88, 90, 91, 92, 93, 94, 94, 95, 95, 96, 96, 96] },
+  { name: 'Contractor C', onTime: 92, quality: 90, defectRate: 1.8, safetyIncidents: 0, slaCompliance: 93, responseDays: 1.8, capacity: 74, regions: ['Scotland', 'North East'], trend: [84, 85, 86, 88, 89, 90, 90, 91, 91, 92, 92, 92] },
+  { name: 'Contractor B', onTime: 89, quality: 87, defectRate: 2.4, safetyIncidents: 1, slaCompliance: 88, responseDays: 2.3, capacity: 91, regions: ['Midlands', 'Wales'], trend: [82, 83, 84, 85, 86, 87, 88, 88, 89, 89, 89, 89] },
+  { name: 'Contractor D', onTime: 83, quality: 81, defectRate: 3.1, safetyIncidents: 1, slaCompliance: 80, responseDays: 3.1, capacity: 68, regions: ['London & South', 'East'], trend: [78, 79, 80, 80, 81, 81, 82, 82, 82, 83, 83, 83] },
+  { name: 'Contractor E', onTime: 75, quality: 74, defectRate: 4.0, safetyIncidents: 2, slaCompliance: 72, responseDays: 4.2, capacity: 59, regions: ['South West'], trend: [70, 71, 71, 72, 72, 73, 73, 74, 74, 74, 75, 75] },
+  { name: 'Contractor F', onTime: 60, quality: 66, defectRate: 5.2, safetyIncidents: 1, slaCompliance: 64, responseDays: 5.0, capacity: 40, regions: ['South West'], trend: [55, 56, 57, 57, 58, 58, 59, 59, 59, 60, 60, 60] },
+];
+
+// Extended spend trend through the full programme horizon to 2029 (cumulative £m).
+export const CASHFLOW_FORECAST = [
+  { period: 'FY25', spend: 22, committed: 34, forecast: 24, approved: 50 },
+  { period: 'FY26', spend: 31, committed: 42, forecast: 33, approved: 50 },
+  { period: 'FY27', spend: 39, committed: 46, forecast: 40, approved: 50 },
+  { period: 'FY28', spend: 44, committed: 47, forecast: 45, approved: 50 },
+  { period: 'FY29', spend: 47, committed: 47, forecast: 47, approved: 50 },
 ];

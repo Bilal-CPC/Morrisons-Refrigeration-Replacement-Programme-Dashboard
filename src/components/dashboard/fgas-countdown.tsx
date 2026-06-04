@@ -30,9 +30,9 @@ export function FGasCountdown({ compact = false }: { compact?: boolean }) {
 
   if (compact) {
     return (
-      <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5">
-        <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
-        <span className="text-xs font-semibold text-amber-700">
+      <div className="flex items-center gap-2 rounded-lg border border-morrison-300 bg-morrison-50 px-3 py-1.5">
+        <AlertTriangle className="h-3.5 w-3.5 text-morrison-600" />
+        <span className="text-xs font-semibold text-morrison-700">
           F-Gas deadline: {time ? time.days.toLocaleString() : '—'} days
         </span>
       </div>
@@ -41,8 +41,8 @@ export function FGasCountdown({ compact = false }: { compact?: boolean }) {
 
   return (
     <div
-      className="flex flex-wrap items-center justify-between gap-3 overflow-hidden rounded-xl border-l-4 px-5 py-3"
-      style={{ background: '#0a2417', borderColor: '#ffc72c' }}
+      className="flex flex-wrap items-center justify-between gap-3 overflow-hidden rounded-xl px-5 py-3"
+      style={{ background: '#0a2417' }}
     >
       <div className="flex items-center gap-2.5">
         <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg" style={{ background: 'rgba(255,199,44,0.15)' }}>

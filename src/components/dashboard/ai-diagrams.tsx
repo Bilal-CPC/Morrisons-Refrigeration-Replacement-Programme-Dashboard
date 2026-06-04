@@ -1,11 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Thermometer,
-  Wind,
-  Droplets,
   TrendingUp,
   TrendingDown,
   Minus,
@@ -29,16 +26,6 @@ const RISK_COLOUR: Record<WeatherRiskLevel, string> = {
   medium: '#d97706',
   high: '#dc2626',
 };
-
-// GB bounds shared with the estate map, for placing region nodes on the SVG.
-const SW = { lat: 49.9, lon: -8.2 };
-const NE = { lat: 58.8, lon: 1.9 };
-const VB_W = 200;
-const VB_H = 280;
-const toXY = (lat: number, lon: number) => ({
-  x: ((lon - SW.lon) / (NE.lon - SW.lon)) * VB_W,
-  y: ((NE.lat - lat) / (NE.lat - SW.lat)) * VB_H,
-});
 
 // ─── Panel shell ────────────────────────────────────────────────────────────
 function Panel({
@@ -68,16 +55,18 @@ function Panel({
   );
 }
 
-// ─── 1. Weather risk — geographic region diagram with live data ───────────────
+// ─── 1. Weather risk — Leaflet map with animated flip-up warning cards ────────
 type RegionState = WeatherRegion & { liveRisk: WeatherRiskLevel; isLive: boolean };
 
 export function WeatherRiskDiagram() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<unknown>(null);
+  const [source, setSource] = useState<'live' | 'modelled'>('modelled');
   const [regions, setRegions] = useState<RegionState[]>(
     WEATHER_REGIONS.map((r) => ({ ...r, liveRisk: r.risk, isLive: false })),
   );
-  const [hovered, setHovered] = useState<string | null>(null);
-  const [source, setSource] = useState<'live' | 'modelled'>('modelled');
 
+  // Fetch live weather via Open-Meteo; falls back to mock on any failure
   useEffect(() => {
     let cancelled = false;
     Promise.all(
@@ -100,110 +89,120 @@ export function WeatherRiskDiagram() {
       setRegions(next);
       if (next.some((r) => r.isLive)) setSource('live');
     });
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
-  const active = regions.find((r) => r.region === hovered) ?? null;
+  // Build (or rebuild) Leaflet map whenever region data updates
+  useEffect(() => {
+    if (!containerRef.current) return;
+    // Destroy any existing instance first
+    if (mapInstanceRef.current) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (mapInstanceRef.current as any).remove();
+      mapInstanceRef.current = null;
+    }
+
+    import('leaflet').then((L) => {
+      if (!containerRef.current || mapInstanceRef.current) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+
+      const map = L.map(containerRef.current, {
+        zoomControl: false,
+        attributionControl: false,
+        scrollWheelZoom: false,
+        dragging: false,
+        touchZoom: false,
+        doubleClickZoom: false,
+        boxZoom: false,
+        keyboard: false,
+      });
+      mapInstanceRef.current = map;
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 13 }).addTo(map);
+
+      const UK_BOUNDS = L.latLngBounds([49.9, -8.2], [58.8, 1.9]);
+      map.fitBounds(UK_BOUNDS, { padding: [20, 20] });
+      requestAnimationFrame(() => {
+        map.invalidateSize();
+        map.fitBounds(UK_BOUNDS, { padding: [20, 20] });
+      });
+
+      regions.forEach((r, idx) => {
+        const colour = RISK_COLOUR[r.liveRisk];
+        const isHigh = r.liveRisk === 'high';
+        const isMedium = r.liveRisk === 'medium';
+        const delay = idx * 100;
+
+        const pulseEl = isHigh
+          ? `<div class="wx-pulse" style="background:${colour};animation-delay:${delay}ms"></div>`
+          : '';
+
+        const warnEl = (isHigh || isMedium)
+          ? `<div class="wx-warn wx-warn-${r.liveRisk}" style="animation-delay:${delay + 200}ms">&#9888; ${r.region.split(/[\s,]/)[0]}</div>`
+          : '';
+
+        const icon = L.divIcon({
+          className: '',
+          html: `<div class="wx-root">${pulseEl}${warnEl}<div class="wx-dot" style="background:${colour}"></div></div>`,
+          iconSize: [110, 56],
+          iconAnchor: [55, 56],
+        });
+
+        L.marker([r.lat, r.lon], { icon })
+          .bindTooltip(
+            `<b>${r.region}</b><br>&#127777; ${r.tempC}°C &nbsp;&#128167; ${r.precip.toFixed(1)}mm &nbsp;&#128168; ${r.wind}km/h<br>${r.storesAtRisk > 0 ? `&#9888; ${r.storesAtRisk} stores at delivery risk` : '&#10003; No active delivery impact'}`,
+            { direction: 'top', className: 'wx-tip' },
+          )
+          .addTo(map);
+      });
+    });
+
+    return () => {
+      if (mapInstanceRef.current) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (mapInstanceRef.current as any).remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [regions]);
 
   return (
     <Panel title="Weather Risk · UK Regions" live={source === 'live' ? 'Open-Meteo live' : 'Modelled'}>
-      <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-[180px_1fr]">
-        {/* Geographic node map */}
-        <svg viewBox={`0 0 ${VB_W} ${VB_H}`} className="h-[260px] w-full">
-          {/* faint GB backdrop */}
-          <path
-            d="M95 18 C70 30 78 60 70 80 C60 100 78 120 72 140 C66 165 95 175 90 200 C85 225 110 240 120 255 C140 245 150 235 158 235 C170 235 175 220 165 205 C180 195 175 175 160 168 C172 150 160 135 145 132 C150 110 135 95 120 96 C128 70 118 45 110 30 Z"
-            fill="#f1f5f9"
-            stroke="#e2e8f0"
-            strokeWidth={1}
-          />
-          {regions.map((r) => {
-            const { x, y } = toXY(r.lat, r.lon);
-            const colour = RISK_COLOUR[r.liveRisk];
-            const isHot = r.liveRisk === 'high';
-            const isActive = hovered === r.region;
-            return (
-              <g
-                key={r.region}
-                onMouseEnter={() => setHovered(r.region)}
-                onMouseLeave={() => setHovered(null)}
-                style={{ cursor: 'pointer' }}
-              >
-                {isHot && (
-                  <circle cx={x} cy={y} r={10} fill={colour} opacity={0.25}>
-                    <animate attributeName="r" values="7;13;7" dur="1.8s" repeatCount="indefinite" />
-                    <animate attributeName="opacity" values="0.35;0;0.35" dur="1.8s" repeatCount="indefinite" />
-                  </circle>
-                )}
-                <circle
-                  cx={x}
-                  cy={y}
-                  r={isActive ? 7 : 5.5}
-                  fill={colour}
-                  stroke="#fff"
-                  strokeWidth={1.5}
-                  style={{ transition: 'r 0.15s' }}
-                />
-              </g>
-            );
-          })}
-        </svg>
-
-        {/* Detail / list */}
-        <div className="flex flex-col justify-center">
-          {active ? (
-            <div className="rounded-lg border border-slate-100 bg-slate-50 p-3">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-bold text-slate-800">{active.region}</span>
-                <span
-                  className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase text-white"
-                  style={{ background: RISK_COLOUR[active.liveRisk] }}
-                >
-                  {active.liveRisk} risk
-                </span>
-              </div>
-              <div className="mb-2 grid grid-cols-3 gap-2">
-                <Metric icon={Thermometer} label="Temp" value={`${active.tempC}°`} />
-                <Metric icon={Droplets} label="Precip" value={`${active.precip.toFixed(1)}`} />
-                <Metric icon={Wind} label="Wind" value={`${active.wind}`} />
-              </div>
-              <p className="text-xs text-slate-500">{active.note}</p>
-              {active.storesAtRisk > 0 && (
-                <p className="mt-1.5 text-xs font-semibold text-red-600">
-                  {active.storesAtRisk} store{active.storesAtRisk !== 1 ? 's' : ''} at risk
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-1.5">
-              {(['high', 'medium', 'low'] as WeatherRiskLevel[]).map((lvl) => {
-                const count = regions.filter((r) => r.liveRisk === lvl).length;
-                return (
-                  <div key={lvl} className="flex items-center gap-2 text-xs">
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: RISK_COLOUR[lvl] }} />
-                    <span className="capitalize text-slate-600">{lvl} risk</span>
-                    <span className="ml-auto font-semibold text-slate-700">{count} region{count !== 1 ? 's' : ''}</span>
-                  </div>
-                );
-              })}
-              <p className="pt-1.5 text-[11px] text-slate-400">Hover a region for live conditions and delivery impact.</p>
-            </div>
-          )}
-        </div>
-      </div>
+      <style>{`
+        .wx-root { position:relative; display:flex; flex-direction:column; align-items:center; }
+        .wx-dot { width:13px; height:13px; border-radius:50%; border:2.5px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.4); position:relative; z-index:2; }
+        .wx-pulse {
+          position:absolute; bottom:0; left:50%; transform:translateX(-50%);
+          width:28px; height:28px; border-radius:50%; z-index:1;
+          animation:wxPulse 2.2s ease-out infinite;
+        }
+        .wx-warn {
+          position:absolute; bottom:17px; left:50%; transform:translateX(-50%);
+          background:white; border-radius:5px; padding:2px 7px; white-space:nowrap;
+          font-size:9px; font-weight:700; z-index:3; pointer-events:none;
+          box-shadow:0 3px 10px rgba(0,0,0,0.18);
+          animation:wxFlipUp 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+        }
+        .wx-warn-high { color:#dc2626; border:1px solid #fca5a5; }
+        .wx-warn-medium { color:#d97706; border:1px solid #fde68a; }
+        @keyframes wxFlipUp {
+          from { opacity:0; transform:translateX(-50%) translateY(8px) scale(0.75); }
+          to   { opacity:1; transform:translateX(-50%) translateY(0)   scale(1);    }
+        }
+        @keyframes wxPulse {
+          0%,100% { opacity:0.4; transform:translateX(-50%) scale(1);   }
+          60%     { opacity:0;   transform:translateX(-50%) scale(2.4); }
+        }
+        .leaflet-tooltip.wx-tip {
+          background:#0a2417 !important; color:white !important; border:none !important;
+          border-radius:6px !important; font-size:11px !important; padding:5px 9px !important;
+          white-space:nowrap !important; box-shadow:0 4px 12px rgba(0,0,0,0.3) !important;
+        }
+        .leaflet-tooltip.wx-tip::before { display:none !important; }
+      `}</style>
+      <div ref={containerRef} style={{ height: 340, width: '100%', borderRadius: '0 0 12px 12px' }} />
     </Panel>
-  );
-}
-
-function Metric({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
-  return (
-    <div className="rounded-md bg-white p-1.5 text-center">
-      <Icon className="mx-auto mb-0.5 h-3 w-3 text-slate-400" />
-      <p className="text-sm font-bold text-slate-800">{value}</p>
-      <p className="text-[9px] text-slate-400">{label}</p>
-    </div>
   );
 }
 
@@ -383,13 +382,14 @@ export function RiskTimeline() {
                 className="relative"
               >
                 <motion.div
-                  className="flex h-7 items-center rounded-md px-2"
-                  style={{ background: `${sevColour[it.severity]}1a`, borderLeft: `3px solid ${sevColour[it.severity]}` }}
+                  className="flex h-7 items-center gap-1.5 rounded-md px-2"
+                  style={{ background: `${sevColour[it.severity]}18` }}
                   initial={{ width: 0 }}
                   whileInView={{ width: `${(it.weeks / WEEKS_MAX) * 100}%` }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.7, delay: i * 0.08 }}
                 >
+                  <span className="h-2 w-2 flex-shrink-0 rounded-full" style={{ background: sevColour[it.severity] }} />
                   <span className="truncate text-[10px] font-semibold" style={{ color: sevColour[it.severity] }}>
                     {it.tag}
                   </span>

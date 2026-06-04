@@ -30,9 +30,10 @@ export async function fetchRegionWeather(lat: number, lon: number): Promise<Live
 
 export type WeatherRiskLevel = 'low' | 'medium' | 'high';
 
-// Derive a delivery-risk level from conditions (cold/wet/windy hurt commissioning).
+// Derive a delivery-risk level from conditions. Extreme heat strains refrigeration
+// plant during commissioning; cold/wet/windy hurt groundworks and lifts.
 export function deriveWeatherRisk(tempC: number, precip: number, wind: number): WeatherRiskLevel {
-  if (tempC <= 3 || wind >= 35 || precip >= 4) return 'high';
-  if (tempC <= 7 || wind >= 22 || precip >= 2) return 'medium';
+  if (tempC >= 32 || tempC <= 3 || wind >= 35 || precip >= 4) return 'high';
+  if (tempC >= 27 || tempC <= 7 || wind >= 22 || precip >= 2) return 'medium';
   return 'low';
 }

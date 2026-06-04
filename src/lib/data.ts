@@ -394,16 +394,18 @@ export interface WeatherRegion {
   note: string;
 }
 
+// Modelled fallback reflects a UK summer heatwave: extreme heat across the South &
+// East stresses refrigeration plant during commissioning; Scotland stays coolest.
 export const WEATHER_REGIONS: WeatherRegion[] = [
-  { region: 'Scotland', lat: 56.5, lon: -4.2, risk: 'high', tempC: 2, precip: 4.1, wind: 38, storesAtRisk: 7, note: 'Cold snap forecast — commissioning at risk Q4' },
-  { region: 'North East', lat: 54.9, lon: -1.6, risk: 'medium', tempC: 6, precip: 1.8, wind: 26, storesAtRisk: 3, note: 'Wind affecting roof-mounted plant lifts' },
-  { region: 'North West', lat: 53.5, lon: -2.6, risk: 'medium', tempC: 7, precip: 2.6, wind: 22, storesAtRisk: 4, note: 'Persistent rain slowing groundworks' },
-  { region: 'Yorkshire', lat: 53.8, lon: -1.5, risk: 'low', tempC: 8, precip: 0.6, wind: 15, storesAtRisk: 1, note: 'Settled — no weather impact expected' },
-  { region: 'Wales', lat: 52.1, lon: -3.8, risk: 'medium', tempC: 7, precip: 3.2, wind: 28, storesAtRisk: 2, note: 'Exposed sites — wind monitoring active' },
-  { region: 'Midlands', lat: 52.5, lon: -1.9, risk: 'low', tempC: 9, precip: 0.4, wind: 13, storesAtRisk: 0, note: 'Settled conditions' },
-  { region: 'East', lat: 52.4, lon: 0.3, risk: 'low', tempC: 9, precip: 0.2, wind: 16, storesAtRisk: 0, note: 'Settled conditions' },
-  { region: 'London & South', lat: 51.4, lon: -0.2, risk: 'low', tempC: 11, precip: 0.3, wind: 12, storesAtRisk: 0, note: 'Mild — no impact' },
-  { region: 'South West', lat: 50.9, lon: -3.5, risk: 'medium', tempC: 10, precip: 2.1, wind: 24, storesAtRisk: 1, note: 'Coastal wind affecting access' },
+  { region: 'Scotland', lat: 56.5, lon: -4.2, risk: 'low', tempC: 16, precip: 0.4, wind: 14, storesAtRisk: 0, note: 'Coolest region — no thermal impact on commissioning' },
+  { region: 'North East', lat: 54.9, lon: -1.6, risk: 'low', tempC: 23, precip: 0.0, wind: 11, storesAtRisk: 0, note: 'Warm and settled — within tolerance' },
+  { region: 'North West', lat: 53.5, lon: -2.6, risk: 'medium', tempC: 26, precip: 0.0, wind: 9, storesAtRisk: 2, note: 'Warming — condensing-unit performance monitored' },
+  { region: 'Yorkshire', lat: 53.8, lon: -1.5, risk: 'medium', tempC: 29, precip: 0.0, wind: 8, storesAtRisk: 3, note: 'Amber heat — plant commissioning under thermal load' },
+  { region: 'Wales', lat: 52.1, lon: -3.8, risk: 'medium', tempC: 27, precip: 0.0, wind: 12, storesAtRisk: 2, note: 'Heat building — refrigeration load tests rescheduled to AM' },
+  { region: 'Midlands', lat: 52.5, lon: -1.9, risk: 'high', tempC: 33, precip: 0.0, wind: 7, storesAtRisk: 6, note: 'Extreme heat — condensing units at thermal limit' },
+  { region: 'East', lat: 52.4, lon: 0.3, risk: 'high', tempC: 34, precip: 0.0, wind: 6, storesAtRisk: 5, note: 'Extreme heat — midday commissioning paused' },
+  { region: 'London & South', lat: 51.4, lon: -0.2, risk: 'high', tempC: 36, precip: 0.0, wind: 8, storesAtRisk: 9, note: 'Peak heatwave — refrigeration plant at thermal limit, demand spike' },
+  { region: 'South West', lat: 50.9, lon: -3.5, risk: 'high', tempC: 32, precip: 0.0, wind: 13, storesAtRisk: 4, note: 'Extreme heat — thermal monitoring on all live commissioning' },
 ];
 
 // ─── Supply-chain signals ──────────────────────────────────────────────────────

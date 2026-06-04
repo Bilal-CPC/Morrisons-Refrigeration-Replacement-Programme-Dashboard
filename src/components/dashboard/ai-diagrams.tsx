@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   TrendingUp,
   TrendingDown,
@@ -10,6 +10,15 @@ import {
   Warehouse,
   Store as StoreIcon,
   Activity,
+  Sun,
+  CloudSun,
+  Cloud,
+  CloudRain,
+  Snowflake,
+  Wind,
+  Droplets,
+  TriangleAlert,
+  Flame,
 } from 'lucide-react';
 import {
   WEATHER_REGIONS,
@@ -20,12 +29,6 @@ import {
 } from '@/lib/data';
 import { fetchRegionWeather, deriveWeatherRisk, type WeatherRiskLevel } from '@/lib/weather';
 import { cn } from '@/lib/utils';
-
-const RISK_COLOUR: Record<WeatherRiskLevel, string> = {
-  low: '#16a34a',
-  medium: '#d97706',
-  high: '#dc2626',
-};
 
 // ─── Panel shell ────────────────────────────────────────────────────────────
 function Panel({
@@ -55,18 +58,55 @@ function Panel({
   );
 }
 
-// ─── 1. Weather risk — Leaflet map with animated flip-up warning cards ────────
+// ─── 1. Weather risk — live weather dashboard (cold = blue, heat = red) ───────
 type RegionState = WeatherRegion & { liveRisk: WeatherRiskLevel; isLive: boolean };
 
+// Temperature → colour ramp, deep blue (cold) through teal/amber to deep red (hot).
+const TEMP_STOPS: [number, [number, number, number]][] = [
+  [-5, [30, 58, 138]],   // deep blue
+  [2, [37, 99, 235]],    // blue
+  [8, [56, 189, 248]],   // sky
+  [14, [20, 184, 166]],  // teal
+  [19, [132, 204, 22]],  // lime
+  [24, [245, 158, 11]],  // amber
+  [29, [249, 115, 22]],  // orange
+  [33, [239, 68, 68]],   // red
+  [38, [185, 28, 28]],   // deep red
+];
+
+function tempColour(t: number): string {
+  if (t <= TEMP_STOPS[0][0]) return `rgb(${TEMP_STOPS[0][1].join(',')})`;
+  const last = TEMP_STOPS[TEMP_STOPS.length - 1];
+  if (t >= last[0]) return `rgb(${last[1].join(',')})`;
+  for (let i = 0; i < TEMP_STOPS.length - 1; i++) {
+    const [t0, c0] = TEMP_STOPS[i];
+    const [t1, c1] = TEMP_STOPS[i + 1];
+    if (t >= t0 && t <= t1) {
+      const f = (t - t0) / (t1 - t0);
+      const ch = c0.map((c, k) => Math.round(c + (c1[k] - c) * f));
+      return `rgb(${ch.join(',')})`;
+    }
+  }
+  return `rgb(${last[1].join(',')})`;
+}
+
+function weatherIcon(temp: number, precip: number, wind: number): React.ElementType {
+  if (precip >= 2) return CloudRain;
+  if (temp <= 2) return Snowflake;
+  if (temp >= 30) return Flame;
+  if (temp >= 23) return Sun;
+  if (wind >= 28) return Wind;
+  if (temp >= 15) return CloudSun;
+  return Cloud;
+}
+
 export function WeatherRiskDiagram() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<unknown>(null);
   const [source, setSource] = useState<'live' | 'modelled'>('modelled');
   const [regions, setRegions] = useState<RegionState[]>(
     WEATHER_REGIONS.map((r) => ({ ...r, liveRisk: r.risk, isLive: false })),
   );
 
-  // Fetch live weather via Open-Meteo; falls back to mock on any failure
+  // Live weather via Open-Meteo; graceful fallback to the modelled heatwave data.
   useEffect(() => {
     let cancelled = false;
     Promise.all(
@@ -92,116 +132,114 @@ export function WeatherRiskDiagram() {
     return () => { cancelled = true; };
   }, []);
 
-  // Build (or rebuild) Leaflet map whenever region data updates
-  useEffect(() => {
-    if (!containerRef.current) return;
-    // Destroy any existing instance first
-    if (mapInstanceRef.current) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (mapInstanceRef.current as any).remove();
-      mapInstanceRef.current = null;
-    }
-
-    import('leaflet').then((L) => {
-      if (!containerRef.current || mapInstanceRef.current) return;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-
-      const map = L.map(containerRef.current, {
-        zoomControl: false,
-        attributionControl: false,
-        scrollWheelZoom: false,
-        dragging: false,
-        touchZoom: false,
-        doubleClickZoom: false,
-        boxZoom: false,
-        keyboard: false,
-      });
-      mapInstanceRef.current = map;
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 13 }).addTo(map);
-
-      const UK_BOUNDS = L.latLngBounds([49.9, -8.2], [58.8, 1.9]);
-      map.fitBounds(UK_BOUNDS, { padding: [20, 20] });
-      requestAnimationFrame(() => {
-        map.invalidateSize();
-        map.fitBounds(UK_BOUNDS, { padding: [20, 20] });
-      });
-
-      regions.forEach((r, idx) => {
-        const colour = RISK_COLOUR[r.liveRisk];
-        const isHigh = r.liveRisk === 'high';
-        const isMedium = r.liveRisk === 'medium';
-        const delay = idx * 100;
-
-        const pulseEl = isHigh
-          ? `<div class="wx-pulse" style="background:${colour};animation-delay:${delay}ms"></div>`
-          : '';
-
-        const warnEl = (isHigh || isMedium)
-          ? `<div class="wx-warn wx-warn-${r.liveRisk}" style="animation-delay:${delay + 200}ms">&#9888; ${r.region.split(/[\s,]/)[0]}</div>`
-          : '';
-
-        const icon = L.divIcon({
-          className: '',
-          html: `<div class="wx-root">${pulseEl}${warnEl}<div class="wx-dot" style="background:${colour}"></div></div>`,
-          iconSize: [110, 56],
-          iconAnchor: [55, 56],
-        });
-
-        L.marker([r.lat, r.lon], { icon })
-          .bindTooltip(
-            `<b>${r.region}</b><br>&#127777; ${r.tempC}°C &nbsp;&#128167; ${r.precip.toFixed(1)}mm &nbsp;&#128168; ${r.wind}km/h<br>${r.storesAtRisk > 0 ? `&#9888; ${r.storesAtRisk} stores at delivery risk` : '&#10003; No active delivery impact'}`,
-            { direction: 'top', className: 'wx-tip' },
-          )
-          .addTo(map);
-      });
-    });
-
-    return () => {
-      if (mapInstanceRef.current) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (mapInstanceRef.current as any).remove();
-        mapInstanceRef.current = null;
-      }
-    };
-  }, [regions]);
+  const alerts = regions.filter((r) => r.liveRisk === 'high');
+  const totalAtRisk = regions.reduce((s, r) => s + r.storesAtRisk, 0);
+  const hottest = regions.reduce((a, b) => (b.tempC > a.tempC ? b : a), regions[0]);
+  const headline =
+    hottest.tempC >= 30
+      ? `Extreme heat warning — ${hottest.tempC}°C peak`
+      : alerts.length > 0
+        ? `${alerts.length} region${alerts.length !== 1 ? 's' : ''} on weather alert`
+        : 'No active weather alerts';
 
   return (
     <Panel title="Weather Risk · UK Regions" live={source === 'live' ? 'Open-Meteo live' : 'Modelled'}>
-      <style>{`
-        .wx-root { position:relative; display:flex; flex-direction:column; align-items:center; }
-        .wx-dot { width:13px; height:13px; border-radius:50%; border:2.5px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.4); position:relative; z-index:2; }
-        .wx-pulse {
-          position:absolute; bottom:0; left:50%; transform:translateX(-50%);
-          width:28px; height:28px; border-radius:50%; z-index:1;
-          animation:wxPulse 2.2s ease-out infinite;
-        }
-        .wx-warn {
-          position:absolute; bottom:17px; left:50%; transform:translateX(-50%);
-          background:white; border-radius:5px; padding:2px 7px; white-space:nowrap;
-          font-size:9px; font-weight:700; z-index:3; pointer-events:none;
-          box-shadow:0 3px 10px rgba(0,0,0,0.18);
-          animation:wxFlipUp 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
-        }
-        .wx-warn-high { color:#dc2626; border:1px solid #fca5a5; }
-        .wx-warn-medium { color:#d97706; border:1px solid #fde68a; }
-        @keyframes wxFlipUp {
-          from { opacity:0; transform:translateX(-50%) translateY(8px) scale(0.75); }
-          to   { opacity:1; transform:translateX(-50%) translateY(0)   scale(1);    }
-        }
-        @keyframes wxPulse {
-          0%,100% { opacity:0.4; transform:translateX(-50%) scale(1);   }
-          60%     { opacity:0;   transform:translateX(-50%) scale(2.4); }
-        }
-        .leaflet-tooltip.wx-tip {
-          background:#0a2417 !important; color:white !important; border:none !important;
-          border-radius:6px !important; font-size:11px !important; padding:5px 9px !important;
-          white-space:nowrap !important; box-shadow:0 4px 12px rgba(0,0,0,0.3) !important;
-        }
-        .leaflet-tooltip.wx-tip::before { display:none !important; }
-      `}</style>
-      <div ref={containerRef} style={{ height: 340, width: '100%', borderRadius: '0 0 12px 12px' }} />
+      <div className="p-4">
+        {/* Featured alert banner */}
+        <AnimatePresence>
+          {alerts.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-3 flex items-center gap-3 overflow-hidden rounded-xl px-4 py-3"
+              style={{ background: 'linear-gradient(90deg,#b91c1c,#ef4444)' }}
+            >
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-white/20">
+                <Flame className="h-5 w-5 text-white" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-white">{headline}</p>
+                <p className="truncate text-xs text-white/80">
+                  {alerts.map((a) => a.region).join(', ')} · refrigeration plant under thermal load
+                </p>
+              </div>
+              <div className="hidden flex-shrink-0 text-right sm:block">
+                <p className="text-lg font-black leading-none text-white">{totalAtRisk}</p>
+                <p className="text-[10px] text-white/70">stores at risk</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Region weather cards */}
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {regions.map((r, i) => {
+            const colour = tempColour(r.tempC);
+            const Icon = weatherIcon(r.tempC, r.precip, r.wind);
+            const atRisk = r.storesAtRisk > 0;
+            return (
+              <motion.div
+                key={r.region}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04 }}
+                className="relative overflow-hidden rounded-xl border border-slate-100 p-3"
+                style={{ background: `linear-gradient(160deg, ${colour}14, #ffffff 70%)` }}
+              >
+                {/* Flip-up warning ribbon for at-risk regions */}
+                <AnimatePresence>
+                  {r.liveRisk === 'high' && (
+                    <motion.span
+                      initial={{ opacity: 0, y: 6, scale: 0.8 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ delay: 0.2 + i * 0.04, type: 'spring', stiffness: 300, damping: 18 }}
+                      className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-red-600 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white shadow-sm"
+                    >
+                      <TriangleAlert className="h-2.5 w-2.5" /> Alert
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+
+                <div className="mb-1.5 flex items-center gap-1.5">
+                  <Icon className="h-4 w-4 flex-shrink-0" style={{ color: colour }} />
+                  <span className="truncate text-[11px] font-bold text-slate-700">{r.region}</span>
+                </div>
+                <div className="flex items-end gap-1">
+                  <span className="text-2xl font-black leading-none" style={{ color: colour }}>
+                    {r.tempC}°
+                  </span>
+                </div>
+                <div className="mt-1.5 flex items-center gap-2.5 text-[10px] text-slate-400">
+                  <span className="flex items-center gap-0.5"><Wind className="h-2.5 w-2.5" />{r.wind}</span>
+                  <span className="flex items-center gap-0.5"><Droplets className="h-2.5 w-2.5" />{r.precip.toFixed(1)}</span>
+                </div>
+                {atRisk && (
+                  <p className="mt-1.5 truncate text-[10px] font-semibold" style={{ color: colour }}>
+                    {r.storesAtRisk} store{r.storesAtRisk !== 1 ? 's' : ''} at risk
+                  </p>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Temperature legend (cold → hot) */}
+        <div className="mt-3 flex items-center gap-2">
+          <span className="text-[10px] font-semibold text-blue-600">Cold</span>
+          <div
+            className="h-2 flex-1 rounded-full"
+            style={{
+              background:
+                'linear-gradient(90deg, rgb(30,58,138), rgb(56,189,248), rgb(20,184,166), rgb(245,158,11), rgb(239,68,68), rgb(185,28,28))',
+            }}
+          />
+          <span className="text-[10px] font-semibold text-red-600">Heat</span>
+        </div>
+        <p className="mt-2 text-[11px] text-slate-400">
+          Colour reflects ambient temperature — extreme heat and cold both stress refrigeration commissioning.
+          {source === 'modelled' && ' Showing modelled heatwave scenario.'}
+        </p>
+      </div>
     </Panel>
   );
 }
